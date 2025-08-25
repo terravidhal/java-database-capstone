@@ -1,5 +1,18 @@
 package com.project.back_end.services;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import com.project.back_end.repo.AdminRepository;
+import com.project.back_end.repo.DoctorRepository;
+import com.project.back_end.repo.PatientRepository;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;
+import java.util.Date;
+
+@Component
 public class TokenService {
 // 1. **@Component Annotation**
 // The @Component annotation marks this class as a Spring component, meaning Spring will manage it as a bean within its application context.
@@ -39,5 +52,63 @@ public class TokenService {
 // - The method gracefully handles any errors by returning false if the token is invalid or an exception occurs.
 // This ensures secure access control based on the user's role and their existence in the system.
 
+    @Value("${jwt.secret:defaultSecretKey}")
+    private String jwtSecret;
 
+    @Autowired
+    private AdminRepository adminRepository;
+
+    @Autowired
+    private DoctorRepository doctorRepository;
+
+    @Autowired
+    private PatientRepository patientRepository;
+
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    }
+
+    public String generateToken(String email) {
+        return Jwts.builder()
+                .subject(email)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)) // 7 days
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    public String extractEmail(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            return claims.getSubject();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public boolean validateToken(String token, String role) {
+        try {
+            String email = extractEmail(token);
+            if (email == null) {
+                return false;
+            }
+
+            switch (role.toLowerCase()) {
+                case "admin":
+                    return adminRepository.findByUsername(email) != null;
+                case "doctor":
+                    return doctorRepository.findByEmail(email) != null;
+                case "patient":
+                    return patientRepository.findByEmail(email) != null;
+                default:
+                    return false;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }
