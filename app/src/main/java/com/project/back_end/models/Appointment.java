@@ -1,72 +1,149 @@
 package com.project.back_end.models;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+@Entity
 public class Appointment {
 
-  // @Entity annotation:
-//    - Marks the class as a JPA entity, meaning it represents a table in the database.
-//    - Required for persistence frameworks (e.g., Hibernate) to map the class to a database table.
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-// 1. 'id' field:
-//    - Type: private Long
-//    - Description:
-//      - Represents the unique identifier for each appointment.
-//      - The @Id annotation marks it as the primary key.
-//      - The @GeneratedValue(strategy = GenerationType.IDENTITY) annotation auto-generates the ID value when a new record is inserted into the database.
+    @ManyToOne
+    @NotNull(message = "Doctor is required")
+    private Doctor doctor;
 
-// 2. 'doctor' field:
-//    - Type: private Doctor
-//    - Description:
-//      - Represents the doctor assigned to this appointment.
-//      - The @ManyToOne annotation defines the relationship, indicating many appointments can be linked to one doctor.
-//      - The @NotNull annotation ensures that an appointment must be associated with a doctor when created.
+    @ManyToOne
+    @NotNull(message = "Patient is required")
+    private Patient patient;
 
-// 3. 'patient' field:
-//    - Type: private Patient
-//    - Description:
-//      - Represents the patient assigned to this appointment.
-//      - The @ManyToOne annotation defines the relationship, indicating many appointments can be linked to one patient.
-//      - The @NotNull annotation ensures that an appointment must be associated with a patient when created.
+    @NotNull(message = "Appointment time is required")
+    @Future(message = "Appointment time must be in the future")
+    private LocalDateTime appointmentTime;
 
-// 4. 'appointmentTime' field:
-//    - Type: private LocalDateTime
-//    - Description:
-//      - Represents the date and time when the appointment is scheduled to occur.
-//      - The @Future annotation ensures that the appointment time is always in the future when the appointment is created.
-//      - It uses LocalDateTime, which includes both the date and time for the appointment.
+    @NotNull(message = "Status is required")
+    private int status; // 0 = Scheduled, 1 = Completed, 2 = Cancelled
 
-// 5. 'status' field:
-//    - Type: private int
-//    - Description:
-//      - Represents the current status of the appointment. It is an integer where:
-//        - 0 means the appointment is scheduled.
-//        - 1 means the appointment has been completed.
-//      - The @NotNull annotation ensures that the status field is not null.
+    @Size(max = 200, message = "Reason for visit cannot exceed 200 characters")
+    private String reasonForVisit;
 
-// 6. 'getEndTime' method:
-//    - Type: private LocalDateTime
-//    - Description:
-//      - This method is a transient field (not persisted in the database).
-//      - It calculates the end time of the appointment by adding one hour to the start time (appointmentTime).
-//      - It is used to get an estimated appointment end time for display purposes.
+    @Size(max = 500, message = "Notes cannot exceed 500 characters")
+    private String notes;
 
-// 7. 'getAppointmentDate' method:
-//    - Type: private LocalDate
-//    - Description:
-//      - This method extracts only the date part from the appointmentTime field.
-//      - It returns a LocalDate object representing just the date (without the time) of the scheduled appointment.
+    @JsonIgnore
+    private String internalNotes;
 
-// 8. 'getAppointmentTimeOnly' method:
-//    - Type: private LocalTime
-//    - Description:
-//      - This method extracts only the time part from the appointmentTime field.
-//      - It returns a LocalTime object representing just the time (without the date) of the scheduled appointment.
+    // Constructors
+    public Appointment() {
+    }
 
-// 9. Constructor(s):
-//    - A no-argument constructor is implicitly provided by JPA for entity creation.
-//    - A parameterized constructor can be added as needed to initialize fields.
+    public Appointment(Long id, Doctor doctor, Patient patient, LocalDateTime appointmentTime, int status,
+                       String reasonForVisit, String notes) {
+        this.id = id;
+        this.doctor = doctor;
+        this.patient = patient;
+        this.appointmentTime = appointmentTime;
+        this.status = status;
+        this.reasonForVisit = reasonForVisit;
+        this.notes = notes;
+    }
 
-// 10. Getters and Setters:
-//    - Standard getter and setter methods are provided for accessing and modifying the fields: id, doctor, patient, appointmentTime, status, etc.
+    // Getters & Setters
+    public Long getId() {
+        return id;
+    }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Doctor getDoctor() {
+        return doctor;
+    }
+
+    public void setDoctor(Doctor doctor) {
+        this.doctor = doctor;
+    }
+
+    public Patient getPatient() {
+        return patient;
+    }
+
+    public void setPatient(Patient patient) {
+        this.patient = patient;
+    }
+
+    public LocalDateTime getAppointmentTime() {
+        return appointmentTime;
+    }
+
+    public void setAppointmentTime(LocalDateTime appointmentTime) {
+        this.appointmentTime = appointmentTime;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public String getReasonForVisit() {
+        return reasonForVisit;
+    }
+
+    public void setReasonForVisit(String reasonForVisit) {
+        this.reasonForVisit = reasonForVisit;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
+    public String getInternalNotes() {
+        return internalNotes;
+    }
+
+    public void setInternalNotes(String internalNotes) {
+        this.internalNotes = internalNotes;
+    }
+
+    // Helper Methods
+    @Transient
+    public LocalDateTime getEndTime() {
+        return appointmentTime.plusHours(1);
+    }
+
+    @Transient
+    public LocalDate getAppointmentDate() {
+        return appointmentTime.toLocalDate();
+    }
+
+    @Transient
+    public LocalTime getAppointmentTimeOnly() {
+        return appointmentTime.toLocalTime();
+    }
+
+    @Transient
+    public String getStatusDescription() {
+        switch (status) {
+            case 0: return "Scheduled";
+            case 1: return "Completed";
+            case 2: return "Cancelled";
+            default: return "Unknown";
+        }
+    }
 }
-
