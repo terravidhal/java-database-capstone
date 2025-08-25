@@ -36,21 +36,26 @@ public class Doctor {
     private String phone;
 
     @ElementCollection
+    @CollectionTable(name = "doctor_available_times", joinColumns = @JoinColumn(name = "doctor_id"))
+    @Column(name = "available_time")
     private List<String> availableTimes;
 
     @Min(value = 0, message = "Years of experience cannot be negative")
     @Max(value = 50, message = "Years of experience cannot exceed 50")
+    @Column(nullable = true)
     private Integer yearsOfExperience;
 
     @Size(max = 255, message = "Clinic address cannot exceed 255 characters")
+    @Column(nullable = true, length = 255)
     private String clinicAddress;
 
     @DecimalMin(value = "0.0", message = "Rating cannot be negative")
     @DecimalMax(value = "5.0", message = "Rating cannot exceed 5.0")
-    @Digits(integer = 1, fraction = 1, message = "Rating must have at most 1 decimal place")
+    @Column(nullable = true, columnDefinition = "DOUBLE")
     private Double rating;
 
     @JsonIgnore
+    @Column(nullable = true)
     private String internalNotes;
 
     // Constructors
