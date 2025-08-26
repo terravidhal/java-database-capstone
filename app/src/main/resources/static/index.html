@@ -12,7 +12,7 @@
 
     <!-- JS utilitaires -->
     <script src="./js/util.js" defer></script>
-    <script src="./js/render.js" defer></script>
+    <script type="module" src="./js/render.js" defer></script>
 
     <!-- JS composants -->
     <script src="./js/components/header.js" defer></script>
@@ -26,10 +26,10 @@
 
             <!-- Contenu principal -->
             <main class="main-content">
-                <h2>Sélectionnez Votre Rôle</h2>
+                <h2>Select Your Role</h2>
                 <div class="role-buttons">
-                    <button id="adminBtn" onclick="selectRole('admin')">Administrateur</button>
-                    <button id="doctorBtn" onclick="selectRole('doctor')">Médecin</button>
+                    <button id="adminBtn" onclick="selectRole('admin')">Admin</button>
+                    <button id="doctorBtn" onclick="selectRole('doctor')">Doctor</button>
                     <button id="patientBtn" onclick="selectRole('patient')">Patient</button>
                 </div>
             </main>
@@ -42,7 +42,7 @@
     <!-- Modal caché par défaut -->
     <div id="modal" class="modal" style="display:none;">
         <div class="modal-content">
-            <button id="closeModal">X</button>
+            <button id="closeModal">&times;</button>
             <div id="modal-body"></div>
         </div>
     </div>

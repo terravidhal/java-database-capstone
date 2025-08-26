@@ -75,8 +75,16 @@ export function openModal(type) {
   document.getElementById('modal-body').innerHTML = modalContent;
   document.getElementById('modal').style.display = 'block';
 
+  // Fermer le modal en cliquant sur le bouton X
   document.getElementById('closeModal').onclick = () => {
     document.getElementById('modal').style.display = 'none';
+  };
+
+  // Fermer le modal en cliquant à l'extérieur
+  document.getElementById('modal').onclick = (event) => {
+    if (event.target === document.getElementById('modal')) {
+      document.getElementById('modal').style.display = 'none';
+    }
   };
 
   if (type === "patientSignup") {
