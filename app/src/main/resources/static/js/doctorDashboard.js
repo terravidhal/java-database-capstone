@@ -11,32 +11,39 @@ const datePicker = document.getElementById("datePicker");
 
 let selectedDate = new Date().toISOString().split("T")[0]; // format YYYY-MM-DD
 let token = localStorage.getItem("token");
-let patientName = null;
+let patientName = "";
 
 // --- Gestion de la barre de recherche ---
-searchBar.addEventListener("input", () => {
-  const inputValue = searchBar.value.trim();
-  patientName = inputValue !== "" ? inputValue : "null";
-  loadAppointments();
-});
+if (searchBar) {
+  searchBar.addEventListener("input", () => {
+      const inputValue = searchBar.value.trim();
+  patientName = inputValue !== "" ? inputValue : "";
+    loadAppointments();
+  });
+}
 
 // --- Bouton "Rendez-vous d'aujourd'hui" ---
-todayButton.addEventListener("click", () => {
-  selectedDate = new Date().toISOString().split("T")[0];
-  datePicker.value = selectedDate;
-  loadAppointments();
-});
+if (todayButton) {
+  todayButton.addEventListener("click", () => {
+    selectedDate = new Date().toISOString().split("T")[0];
+    if (datePicker) datePicker.value = selectedDate;
+    loadAppointments();
+  });
+}
 
 // --- Sélecteur de date ---
-datePicker.addEventListener("change", () => {
-  selectedDate = datePicker.value;
-  loadAppointments();
-});
+if (datePicker) {
+  datePicker.addEventListener("change", () => {
+    selectedDate = datePicker.value;
+    loadAppointments();
+  });
+}
 
 // --- Fonction pour charger les rendez-vous ---
 async function loadAppointments() {
   try {
-    const appointments = await getAllAppointments(selectedDate, patientName, token);
+    const data = await getAllAppointments(selectedDate, patientName, token);
+    const appointments = Array.isArray(data) ? data : (data.appointments || []);
 
     // Nettoyer le tableau avant de recharger
     tableBody.innerHTML = "";

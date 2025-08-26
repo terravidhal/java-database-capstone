@@ -7,7 +7,18 @@ import { bookAppointment } from './services/appointmentRecordService.js';
 
 document.addEventListener("DOMContentLoaded", () => {
   loadDoctorCards();
+  bindFilters();
 });
+
+function bindFilters() {
+  const search = document.getElementById("searchBar");
+  const time = document.getElementById("filterTime");
+  const spec = document.getElementById("filterSpecialty");
+  const handler = () => filterDoctorsOnChange();
+  if (search) search.addEventListener("input", handler);
+  if (time) time.addEventListener("change", handler);
+  if (spec) spec.addEventListener("change", handler);
+}
 
 function loadDoctorCards() {
   getDoctors()
@@ -99,9 +110,9 @@ function filterDoctorsOnChange() {
   const filterSpecialty = document.getElementById("filterSpecialty").value;
 
 
-  const name = searchBar.length > 0 ? searchBar : null;
-  const time = filterTime.length > 0 ? filterTime : null;
-  const specialty = filterSpecialty.length > 0 ? filterSpecialty : null;
+  const name = searchBar.length > 0 ? searchBar : "";
+  const time = filterTime.length > 0 ? filterTime : "";
+  const specialty = filterSpecialty.length > 0 ? filterSpecialty : "";
 
   filterDoctors(name, time, specialty)
     .then(response => {

@@ -75,8 +75,12 @@ export async function saveDoctor(doctor, token) {
  */
 export async function filterDoctors(name = "", time = "", specialty = "") {
   try {
+    const n = name && name.trim() !== "" ? encodeURIComponent(name) : "-";
+    const t = time && time.trim() !== "" ? encodeURIComponent(time) : "-";
+    const s = specialty && specialty.trim() !== "" ? encodeURIComponent(specialty) : "-";
+
     const response = await fetch(
-      `${DOCTOR_API}/filter/${name}/${time}/${specialty}`
+      `${DOCTOR_API}/filter/${n}/${t}/${s}`
     );
     if (!response.ok) {
       console.error("Erreur lors de la récupération des médecins filtrés");

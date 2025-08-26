@@ -102,7 +102,7 @@ public class DoctorService {
             response.put("error", "Invalid credentials");
             return ResponseEntity.badRequest().body(response);
         }
-        String token = tokenService.generateTokenForDoctor(doctor.getId());
+        String token = tokenService.generateToken(doctor.getEmail());
         response.put("token", token);
         return ResponseEntity.ok(response);
     }
@@ -170,9 +170,10 @@ public class DoctorService {
         return doctors.stream().filter(d -> {
             if (d.getAvailableTimes() == null) return false;
             return d.getAvailableTimes().stream().anyMatch(t -> {
-                // Convertir le string en LocalTime si nécessaire
                 try {
-                    java.time.LocalTime time = java.time.LocalTime.parse(t);
+                    // t format like "09:00-10:00" → take start time before '-'
+                    String start = t.contains("-") ? t.split("-")[0] : t;
+                    java.time.LocalTime time = java.time.LocalTime.parse(start);
                     int hour = time.getHour();
                     return "AM".equalsIgnoreCase(amOrPm) ? hour < 12 : hour >= 12;
                 } catch (Exception e) {

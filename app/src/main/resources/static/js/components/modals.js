@@ -1,6 +1,11 @@
 // modals.js
 export function openModal(type) {
   let modalContent = '';
+  const useAuthModal = (type === 'adminLogin' || type === 'doctorLogin');
+  const modalId = useAuthModal ? 'auth-modal' : 'modal';
+  const bodyId = useAuthModal ? 'auth-modal-body' : 'modal-body';
+  const closeId = useAuthModal ? 'authCloseModal' : 'closeModal';
+
   if (type === 'addDoctor') {
     modalContent = `
          <h2>Add Doctor</h2>
@@ -72,13 +77,36 @@ export function openModal(type) {
       `;
   }
 
-  document.getElementById('modal-body').innerHTML = modalContent;
-  document.getElementById('modal').style.display = 'block';
+  // Inject in chosen modal (auth vs general)
+  const modalEl = document.getElementById(modalId);
+  const bodyEl = document.getElementById(bodyId);
+  if (!modalEl || !bodyEl) {
+    console.error('Modal container not found:', modalId, bodyId);
+    return;
+  }
+  // Inject differently for auth (already has .modal-content) vs general
+  if (useAuthModal) {
+    bodyEl.innerHTML = `${modalContent}`;
+  } else {
+    bodyEl.innerHTML = `
+      <div class="modal-content">
+        <button class="modal-close" id="modalInnerClose" aria-label="Close" title="Close">&times;</button>
+        ${modalContent}
+      </div>`;
+  }
+  modalEl.style.display = 'block';
 
-  // Fermer le modal en cliquant sur le bouton X
-  document.getElementById('closeModal').onclick = () => {
-    document.getElementById('modal').style.display = 'none';
+  // Close handlers (inner + outer)
+  const innerClose = useAuthModal ? document.getElementById('authInnerClose') : document.getElementById('modalInnerClose');
+  if (innerClose) innerClose.onclick = () => { modalEl.style.display = 'none'; };
+  const outerClose = document.getElementById(closeId);
+  if (outerClose) outerClose.onclick = () => { modalEl.style.display = 'none'; };
+
+  // Click outside to close
+  modalEl.onclick = (event) => {
+    if (event.target === modalEl) modalEl.style.display = 'none';
   };
+
 
   // Fermer le modal en cliquant à l'extérieur
   document.getElementById('modal').onclick = (event) => {

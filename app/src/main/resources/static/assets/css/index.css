@@ -119,3 +119,40 @@ button:hover {
     color: #333 !important;
     transform: scale(1.1) !important;
 }
+
+/* Auth modal sizing and close button */
+#auth-modal .modal-content {
+  position: relative;
+  max-width: 380px;
+  width: 90%;
+  margin: 6% auto;
+  padding: 16px;
+}
+
+#auth-modal .modal-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.15s ease-in-out;
+}
+
+#auth-modal .modal-close:hover {
+  background: #f0f0f0;
+  color: #222;
+  transform: scale(1.05);
+}
+
+/* Hide any legacy outer close in auth modal */
+#auth-modal #authCloseModal { display: none; }

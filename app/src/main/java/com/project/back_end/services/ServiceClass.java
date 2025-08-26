@@ -72,7 +72,10 @@ public class ServiceClass {
     // Filtrage des médecins
     // -------------------------
     public Map<String, Object> filterDoctor(String name, String specialty, String time) {
-        return doctorService.filterDoctorsByNameSpecilityandTime(name, specialty, time);
+        String n = (name == null || name.equals("-") || name.isBlank()) ? "" : name;
+        String s = (specialty == null || specialty.equals("-") || specialty.isBlank()) ? "" : specialty;
+        String t = (time == null || time.equals("-") || time.isBlank()) ? null : time; // null = pas de filtre temps
+        return doctorService.filterDoctorsByNameSpecilityandTime(n, s, t);
     }
 
     // -------------------------

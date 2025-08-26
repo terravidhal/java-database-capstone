@@ -106,11 +106,11 @@ button:hover {
 
 .modal-content {
     background-color: #fff;
-    margin: 10% auto;
-    padding: 20px;
+    margin: 6% auto;
+    padding: 16px;
     border-radius: 12px;
-    width: 80%;
-    max-width: 500px;
+    width: 90%;
+    max-width: 380px;
     text-align: left;
 }
 
@@ -124,6 +124,42 @@ button:hover {
 
 .close:hover {
     color: #A62B1F;
+}
+
+/* Ensure modal content can position inner close button */
+.modal-content {
+  position: relative;
+}
+
+/* Small close button at top-right inside modal */
+.modal-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.15s ease-in-out;
+}
+
+.modal-close:hover {
+  background: #f0f0f0;
+  color: #222;
+  transform: scale(1.05);
+}
+
+/* Hide legacy outer close icon in admin modal (we use inner close instead) */
+.modal > #closeModal {
+  display: none;
 }
 
 /* Zone de contenu dynamique */

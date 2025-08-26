@@ -5,7 +5,7 @@ import { openModal } from "../components/modals.js"; // pour afficher les popups
 import { API_BASE_URL } from "../config/config.js";  // URL de base de l’API
 
 // Définition des endpoints
-const ADMIN_API = API_BASE_URL + "/admin";
+const ADMIN_API = API_BASE_URL + "/admin/login";
 const DOCTOR_API = API_BASE_URL + "/doctor/login";
 
 // Assure que le DOM est chargé avant d’attacher les listeners
@@ -35,8 +35,8 @@ window.onload = function () {
 window.adminLoginHandler = async function () {
   try {
     // Récupération des champs du formulaire
-    const username = document.getElementById("adminUsername").value;
-    const password = document.getElementById("adminPassword").value;
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
 
     const admin = { username, password };
 
@@ -66,10 +66,10 @@ window.adminLoginHandler = async function () {
 window.doctorLoginHandler = async function () {
   try {
     // Récupération des champs du formulaire
-    const email = document.getElementById("doctorEmail").value;
-    const password = document.getElementById("doctorPassword").value;
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-    const doctor = { email, password };
+    const doctor = { identifier: email, password };
 
     // Requête POST vers l’API Doctor
     const response = await fetch(DOCTOR_API, {

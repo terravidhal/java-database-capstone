@@ -47,11 +47,12 @@ public class PatientService {
         try {
             String email = tokenService.extractEmail(token);
             Patient patient = patientRepository.findByEmail(email);
-            if (patient == null || !patient.getId().equals(id)) {
-                response.put("error", "Unauthorized access");
-                return ResponseEntity.status(401).body(response);
+            if (patient == null) {
+                response.put("error", "Patient not found");
+                return ResponseEntity.status(404).body(response);
             }
-            List<AppointmentDTO> appointments = appointmentRepository.findByPatientId(id)
+            Long patientId = patient.getId();
+            List<AppointmentDTO> appointments = appointmentRepository.findByPatientId(patientId)
                     .stream()
                     .map(this::convertToDTO)
                     .collect(Collectors.toList());

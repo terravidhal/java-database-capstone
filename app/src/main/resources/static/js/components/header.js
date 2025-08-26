@@ -81,14 +81,62 @@ function logoutPatient() {
 }
 
 // Ajout des écouteurs pour boutons qui peuvent être présents selon le rôle
+function ensureOpenModal(callback) {
+  if (window.openModal && typeof window.openModal === "function") {
+    callback();
+    return;
+  }
+  const s = document.createElement("script");
+  s.type = "module";
+  s.textContent = "import { openModal } from '/js/components/modals.js'; window.openModal = openModal;";
+  s.onload = () => callback();
+  document.head.appendChild(s);
+}
+
+// Provide adminAddDoctor globally if not defined
+if (!window.adminAddDoctor) {
+  window.adminAddDoctor = async function () {
+    try {
+      const name = document.getElementById("doctorName")?.value;
+      const specialty = document.getElementById("specialization")?.value;
+      const email = document.getElementById("doctorEmail")?.value;
+      const password = document.getElementById("doctorPassword")?.value;
+      const phone = document.getElementById("doctorPhone")?.value;
+      const availability = Array.from(document.querySelectorAll('input[name="availability"]:checked')).map(c => c.value);
+      const token = localStorage.getItem("token");
+      if (!name || !specialty || !email || !password || !phone) {
+        alert("Please fill all required fields");
+        return;
+      }
+      const doctor = { name, specialty, email, password, phone, availableTimes: availability };
+      const res = await fetch(`/doctor/${token}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(doctor)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert("Doctor added");
+        const modal = document.getElementById('modal');
+        if (modal) modal.style.display = 'none';
+      } else {
+        alert(data.error || "Failed to add doctor");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Unexpected error while adding doctor");
+    }
+  }
+}
+
 function attachHeaderButtonListeners() {
   const patientLoginBtn = document.getElementById("patientLogin");
   const patientSignupBtn = document.getElementById("patientSignup");
-  if (patientLoginBtn) patientLoginBtn.addEventListener("click", () => openModal("patientLogin"));
-  if (patientSignupBtn) patientSignupBtn.addEventListener("click", () => openModal("patientSignup"));
+  if (patientLoginBtn) patientLoginBtn.addEventListener("click", () => ensureOpenModal(() => openModal("patientLogin")));
+  if (patientSignupBtn) patientSignupBtn.addEventListener("click", () => ensureOpenModal(() => openModal("patientSignup")));
 
   const addDocBtn = document.getElementById("addDocBtn");
-  if (addDocBtn) addDocBtn.addEventListener("click", () => openModal("addDoctor"));
+  if (addDocBtn) addDocBtn.addEventListener("click", () => ensureOpenModal(() => openModal("addDoctor")));
 }
 
 // Initialisation à l'arrivée sur la page

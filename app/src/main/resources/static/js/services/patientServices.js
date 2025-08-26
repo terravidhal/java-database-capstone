@@ -34,11 +34,15 @@ export async function patientSignup(data) {
  * @returns {Response} Réponse complète du fetch
  */
 export async function patientLogin(data) {
-  console.log("patientLogin :", data); // À retirer en production
+  // Adapter au backend: { identifier, password }
+  const payload = {
+    identifier: data.identifier || data.email,
+    password: data.password,
+  };
   return await fetch(`${PATIENT_API}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
 }
 
@@ -67,7 +71,8 @@ export async function getPatientData(token) {
  */
 export async function getPatientAppointments(id, token, user) {
   try {
-    const response = await fetch(`${PATIENT_API}/${id}/${user}/${token}`);
+    // Backend endpoint actuel: /patient/{token}/appointments
+    const response = await fetch(`${PATIENT_API}/${token}/appointments`);
     const data = await response.json();
     return response.ok ? data.appointments : null;
   } catch (error) {
