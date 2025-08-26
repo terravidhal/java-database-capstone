@@ -26,8 +26,8 @@ public class TokenService {
     private String jwtSecret;
 
     public TokenService(AdminRepository adminRepository,
-                        DoctorRepository doctorRepository,
-                        PatientRepository patientRepository) {
+            DoctorRepository doctorRepository,
+            PatientRepository patientRepository) {
         this.adminRepository = adminRepository;
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
@@ -59,8 +59,9 @@ public class TokenService {
     public boolean validateToken(String token, String userType) {
         try {
             String identifier = extractIdentifier(token);
-            if (identifier == null) return false;
-            
+            if (identifier == null)
+                return false;
+
             switch (userType.toLowerCase()) {
                 case "admin":
                     return adminRepository.findByUsername(identifier) != null;
@@ -89,4 +90,23 @@ public class TokenService {
     public String extractEmail(String token) {
         return extractIdentifier(token);
     }
+
+    // Récupérer l'ID du patient depuis le token
+    public Long getPatientIdFromToken(String token) {
+        String identifier = extractIdentifier(token);
+        if (identifier == null)
+            return null;
+        Patient patient = patientRepository.findByEmail(identifier);
+        return patient != null ? patient.getId() : null;
+    }
+
+    // Récupérer l'ID du médecin depuis le token
+    public Long getDoctorIdFromToken(String token) {
+        String identifier = extractIdentifier(token);
+        if (identifier == null)
+            return null;
+        Doctor doctor = doctorRepository.findByEmail(identifier);
+        return doctor != null ? doctor.getId() : null;
+    }
+
 }

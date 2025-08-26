@@ -44,4 +44,14 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @Query("SELECT a FROM Appointment a LEFT JOIN FETCH a.doctor d " +
            "WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', :doctorName, '%')) AND a.patient.id = :patientId AND a.status = :status")
     List<Appointment> filterByDoctorNameAndPatientIdAndStatus(String doctorName, Long patientId, int status);
+
+    // -------------------------
+    // Méthodes nécessaires pour le service sécurisé
+    // -------------------------
+
+    // Vérifie si un créneau est déjà pris pour un médecin
+    boolean existsByDoctorIdAndAppointmentTime(Long doctorId, LocalDateTime appointmentTime);
+
+    // Vérifie si un créneau est déjà pris pour un médecin, en excluant un rendez-vous spécifique (pour update)
+    boolean existsByDoctorIdAndAppointmentTimeAndIdNot(Long doctorId, LocalDateTime appointmentTime, Long id);
 }

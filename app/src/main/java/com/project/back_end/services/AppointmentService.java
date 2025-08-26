@@ -8,10 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.ResponseEntity;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.HashMap;
 
 @Service
 public class AppointmentService {
@@ -23,9 +23,9 @@ public class AppointmentService {
 
     @Autowired
     public AppointmentService(AppointmentRepository appointmentRepository,
-                              PatientRepository patientRepository,
-                              DoctorRepository doctorRepository,
-                              TokenService tokenService) {
+            PatientRepository patientRepository,
+            DoctorRepository doctorRepository,
+            TokenService tokenService) {
         this.appointmentRepository = appointmentRepository;
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
@@ -36,6 +36,12 @@ public class AppointmentService {
     @Transactional
     public int bookAppointment(Appointment appointment) {
         try {
+            // Vérifie si le créneau est déjà pris pour le même médecin
+            if (appointmentRepository.existsByDoctorIdAndAppointmentTime(
+                    appointment.getDoctor().getId(),
+                    appointment.getAppointmentTime())) {
+                return 0; // Créneau déjà pris
+            }
             appointmentRepository.save(appointment);
             return 1;
         } catch (Exception e) {
@@ -48,8 +54,9 @@ public class AppointmentService {
     @Transactional
     public ResponseEntity<Map<String, String>> updateAppointment(Appointment appointment) {
         Map<String, String> response = new HashMap<>();
-        Optional<Appointment> existingOpt = appointmentRepository.findById(appointment.getId());
 
+        // Vérifie si le rendez-vous existe
+        Optional<Appointment> existingOpt = appointmentRepository.findById(appointment.getId());
         if (existingOpt.isEmpty()) {
             response.put("error", "Appointment not found");
             return ResponseEntity.badRequest().body(response);
@@ -57,19 +64,35 @@ public class AppointmentService {
 
         Appointment existing = existingOpt.get();
 
-        // Validation simple : vérifie si le patient correspond
+        // Vérifie que le patient correspond
         if (!existing.getPatient().getId().equals(appointment.getPatient().getId())) {
             response.put("error", "Patient ID mismatch");
+            return ResponseEntity.status(403).body(response);
+        }
+
+        // Vérifie si le nouveau créneau est déjà pris pour ce médecin
+        boolean conflict = appointmentRepository.existsByDoctorIdAndAppointmentTimeAndIdNot(
+                existing.getDoctor().getId(),
+                appointment.getAppointmentTime(),
+                existing.getId());
+        if (conflict) {
+            response.put("error", "Time slot already booked for this doctor");
             return ResponseEntity.badRequest().body(response);
         }
 
         try {
+            // Mettre à jour le rendez-vous
             existing.setAppointmentTime(appointment.getAppointmentTime());
-            existing.setStatus(appointment.getStatus());
+            existing.setStatus(appointment.getStatus()); // int, pas besoin de conversion
+            existing.setReasonForVisit(appointment.getReasonForVisit());
+            existing.setNotes(appointment.getNotes());
             appointmentRepository.save(existing);
+
             response.put("success", "Appointment updated successfully");
             return ResponseEntity.ok(response);
+
         } catch (Exception e) {
+            e.printStackTrace();
             response.put("error", "Failed to update appointment");
             return ResponseEntity.status(500).body(response);
         }
@@ -88,10 +111,12 @@ public class AppointmentService {
 
         Appointment existing = existingOpt.get();
 
-        // Vérifie si le patient qui annule est bien celui ayant réservé
-        // Note: Cette validation devrait être faite côté frontend ou avec une méthode appropriée
-        // Pour l'instant, on accepte la suppression si l'appointment existe
-        // TODO: Implémenter une validation plus robuste du token
+        // Vérifie que le patient qui annule est bien le propriétaire
+        Long patientId = tokenService.getPatientIdFromToken(token);
+        if (patientId == null || !existing.getPatient().getId().equals(patientId)) {
+            response.put("error", "Unauthorized cancellation");
+            return ResponseEntity.status(403).body(response);
+        }
 
         try {
             appointmentRepository.delete(existing);
@@ -108,19 +133,20 @@ public class AppointmentService {
     public Map<String, Object> getAppointment(String pname, LocalDate date, String token) {
         Map<String, Object> result = new HashMap<>();
 
-        // Note: Pour l'instant, on utilise une approche simplifiée
-        // TODO: Implémenter l'extraction du doctorId depuis le token
-        // Pour l'instant, on récupère tous les rendez-vous de la date
-        Long doctorId = 1L; // Temporaire - à remplacer par l'extraction depuis le token
+        Long doctorId = tokenService.getDoctorIdFromToken(token);
+        if (doctorId == null) {
+            result.put("error", "Invalid token or doctor not found");
+            return result;
+        }
+
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.plusDays(1).atStartOfDay();
 
         List<Appointment> appointments;
         if (pname != null && !pname.isEmpty()) {
-            // Utiliser la méthode existante du repository
-            appointments = appointmentRepository.findByDoctorIdAndPatient_NameContainingIgnoreCaseAndAppointmentTimeBetween(
-                    doctorId, pname, start, end
-            );
+            appointments = appointmentRepository
+                    .findByDoctorIdAndPatient_NameContainingIgnoreCaseAndAppointmentTimeBetween(
+                            doctorId, pname, start, end);
         } else {
             appointments = appointmentRepository.findByDoctorIdAndAppointmentTimeBetween(doctorId, start, end);
         }
@@ -128,4 +154,15 @@ public class AppointmentService {
         result.put("appointments", appointments);
         return result;
     }
+
+    //
+    @Transactional
+    public void updateAppointmentStatus(Long appointmentId, int status) {
+        Optional<Appointment> existingOpt = appointmentRepository.findById(appointmentId);
+        existingOpt.ifPresent(appointment -> {
+            appointment.setStatus(status);
+            appointmentRepository.save(appointment);
+        });
+    }
+
 }
